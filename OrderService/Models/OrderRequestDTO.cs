@@ -2,11 +2,11 @@
 
 namespace OrderService.Models;
 
-public class OrderRequestDto(string productName, int quantity)
+public class OrderRequestDto
 {
-    [Required(ErrorMessage = "Product name is required")]
-    public string ProductName{get;} = productName;
-
-    [Required(ErrorMessage = "Quantity is required")]
-    public int Quantity{get;} = quantity;
+    [Range(1, int.MaxValue, ErrorMessage = "ProductId must be not null")]
+    public int ProductId {get; set; }
+    
+    [Range(1, int.MaxValue, ErrorMessage = "Quantity must be not null")]
+    public int Quantity {get; set; }
 }

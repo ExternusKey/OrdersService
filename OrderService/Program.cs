@@ -1,44 +1,36 @@
-var builder = WebApplication.CreateBuilder(args);
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+using OrderService.Extensions;
 
-var app = builder.Build();
+var service = WebApplication.CreateBuilder(args);
+var configuration = service.Configuration;
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+service.Services.AddEndpointsApiExplorer();
+service.Services.AddSwaggerGen();
+
+service.Services.AddOrderService();
+service.Services.AddDataLayer(configuration);
+
+service.Services.AddControllers().AddJsonOptions(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
+service.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+    options.SerializerOptions.WriteIndented = true;
+});
 
+var app = service.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+
+app.Services.InitializeDatabase();
+app.UseRouting();
+app.MapControllers();
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
-
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

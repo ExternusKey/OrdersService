@@ -1,14 +1,15 @@
 ﻿using Confluent.Kafka;
-using OrderService.Config;
-using OrderService.Services;
+using ProcessingService.Config;
+using ProcessingService.Models.Responses;
 
-namespace OrderService.Kafka;
+namespace ProcessingService.Kafka;
 
-public class OrderServiceProducer
+public class ProcessingServiceProducer
 {
     private readonly IProducer<string, string> _producer;
     private const string TopicName = ProducersConfig.TopicName;
-    public OrderServiceProducer()
+
+    public ProcessingServiceProducer()
     {
         var config = new ProducerConfig
         {
@@ -16,15 +17,17 @@ public class OrderServiceProducer
         };
         _producer = new ProducerBuilder<string, string>(config).Build();
     }
-
-    public async Task SendOrderInfoAsync(string orderRequestJson)
+    
+    public async Task SendStatusOrderAsync(string orderStatusJson)
     {
         var message = new Message<string, string>
         {
             Key = Guid.NewGuid().ToString(),
-            Value = orderRequestJson
+            Value = orderStatusJson
         };
+        
         await _producer.ProduceAsync(TopicName, message);
-        Console.WriteLine("[OrderService] Order request send to Kafka...");
+        Console.WriteLine("[Processing] Order status send to Kafka...");
     }
+
 }

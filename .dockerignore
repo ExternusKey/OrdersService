@@ -1,25 +1,67 @@
-﻿**/.dockerignore
-**/.env
-**/.git
-**/.gitignore
-**/.project
-**/.settings
-**/.toolstarget
-**/.vs
-**/.vscode
-**/.idea
-**/*.*proj.user
-**/*.dbmdl
-**/*.jfm
-**/azds.yaml
-**/bin
-**/charts
-**/docker-compose*
-**/Dockerfile*
-**/node_modules
-**/npm-debug.log
-**/obj
-**/secrets.dev.yaml
-**/values.dev.yaml
-LICENSE
-README.md
+﻿# Include the solution file
+!*.sln
+
+# Include the project files
+!*.csproj
+!*.fsproj
+!*.vbproj
+
+# Include the source code directories
+!**/*.cs
+!**/*.fs
+!**/*.vb
+
+# Include necessary configuration files
+!**/appsettings.json
+!**/appsettings.*.json
+!**/web.config
+!**/nlog.config
+
+# Include the NuGet configuration file
+!nuget.config
+
+# Include the Dockerfile
+!Dockerfile
+
+# Include the .git directory (optional, if you want to include Git history)
+!.git/
+
+# Include the .gitignore file (optional)
+!.gitignore
+
+# Include the .dockerignore file (optional)
+!.dockerignore
+
+# Exclude the bin and obj directories
+**/bin/
+**/obj/
+
+# Exclude the .vs directory (Visual Studio user-specific files)
+.vs/
+
+# Exclude the .vscode directory (Visual Studio Code user-specific files)
+.vscode/
+
+# Exclude the .idea directory (Rider user-specific files)
+.idea/
+
+# Exclude the packages directory (NuGet packages)
+**/packages/
+
+# Exclude the node_modules directory (if you have front-end assets)
+**/node_modules/
+
+# Exclude the TestResults directory (if you have unit tests)
+TestResults/
+
+# Exclude the .env file (if you have environment variables)
+.env
+
+# Exclude the .user files (Visual Studio user-specific files)
+**/*.user
+
+# Exclude the .suo files (Visual Studio user-specific files)
+**/*.suo
+
+# Exclude the .cache files (build cache)
+**/*.cache

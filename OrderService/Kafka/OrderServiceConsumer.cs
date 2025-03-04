@@ -1,15 +1,21 @@
 ﻿using System.Text.Json;
+using Common.Models;
 using Confluent.Kafka;
 using OrderService.Config;
 using OrderService.Models;
+using OrderService.Services;
+using ProcessingService.Models.Responses;
 
 namespace OrderService.Kafka;
 
 public class OrderServiceConsumer : BackgroundService
 {
     private readonly IConsumer<string, string> _consumer;
-    public OrderServiceConsumer()
+    private readonly IServiceProvider _serviceProvider;
+    
+    public OrderServiceConsumer(IServiceProvider serviceProvider)
     {
+        _serviceProvider = serviceProvider;
         var config = new ConsumerConfig
         {
             BootstrapServers = ConsumersConfig.BootstrapServers,
@@ -22,16 +28,32 @@ public class OrderServiceConsumer : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            var consumeResult = await Task.Run(() => _consumer.Consume(stoppingToken), stoppingToken);
-            var orderConfirmation = JsonSerializer.Deserialize<OrderConfirmation>(consumeResult.Message.Value);
-            if (orderConfirmation?.OrderStatus != "confirmed")
+      
+            try
             {
-                // TODO: Ордер отклонен
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    var consumeResult = await Task.Run(() => _consumer.Consume(stoppingToken), stoppingToken);
+                    var orderConfirmation = JsonSerializer.Deserialize<OrderStatusConfirmationResponse>(consumeResult.Message.Value);
+
+                    if (orderConfirmation == null)
+                        continue;
+
+                    using var scope = _serviceProvider.CreateScope();
+                    var ordersService = scope.ServiceProvider.GetRequiredService<OrdersService>();
+                    
+                    await ordersService.OrderUpdateAsync(orderConfirmation.OrderId, orderConfirmation.OrderStatus, orderConfirmation.RejectionReason);
+
+                }
             }
-            //TODO: Ордер разрешен и нужно прописать логику удаления товаров из таблицы + положительный ответ
-        }
+            catch
+            {
+                Console.WriteLine("[OrderService] Error occured while processing message");
+            }
+            finally
+            {
+                _consumer.Close();
+            }
+        
     }
 }

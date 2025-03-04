@@ -1,40 +1,45 @@
-﻿using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using OrderService.Kafka;
+﻿using Microsoft.AspNetCore.Mvc;
+using OrderService.Exceptions;
 using OrderService.Models;
-using OrderService.Repositories;
+using OrderService.Services;
 
 namespace OrderService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class OrderController(OrderDbContext dbContext, OrderServiceProducer kafkaProducer)
+public class OrderController(OrdersService ordersService)
     : Controller
 {
-    [HttpPost]
+    [HttpPost("CreateOrder")] 
     public async Task<IActionResult> CreateOrderRequestAsync([FromBody] OrderRequestDto orderRequestDto)
     {
-        var orderRequest = new OrderRequest()
+        try
         {
-            Id = Guid.NewGuid(),
-            Product = orderRequestDto.ProductName,
-            Quantity = orderRequestDto.Quantity,
-            OrderDate = DateTime.Now,
-        };
-        
-        dbContext.OrderRequests.Add(orderRequest);
-        await dbContext.SaveChangesAsync();
-
-        var json = JsonSerializer.Serialize(orderRequest);
-        await kafkaProducer.SendOrderInfoAsync(json);
-        
-        return Ok(new { orderRequestId = orderRequest.Id });
+            var orderRequestId = await ordersService.CreateOrderRequestAsync(orderRequestDto);
+            return Ok(new { orderRequestId });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+        }
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetInfoAboutOrderAsync([FromBody] string orderRequestId)
+    [HttpGet("GetOrderInfo")]
+    public async Task<IActionResult> GetInfoAboutOrderAsync([FromQuery] int orderRequestId)
     {
-        // TODO : Получения инфы о заказе
-        return Ok(await dbContext.OrderRequests.FindAsync(orderRequestId));
+        try
+        {
+            var orderInfo = await ordersService.GetOrderInfoAsync(orderRequestId);
+            return Ok(new { orderInfo });
+        }
+        catch (OrderNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });  
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+        }
     }
+
 }

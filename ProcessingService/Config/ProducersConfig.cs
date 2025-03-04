@@ -1,8 +1,8 @@
-﻿namespace OrderService.Config;
+﻿namespace ProcessingService.Config;
 
 public static class ProducersConfig
 {
-    public const string TopicName = "order_created";
+    public const string TopicName = "order_confirmation_status";
     public static readonly string? BootstrapServers;
     
     static ProducersConfig()
