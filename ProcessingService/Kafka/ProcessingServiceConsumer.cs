@@ -33,8 +33,10 @@ public class ProcessingServiceConsumer : BackgroundService
                     var consumeResult = await Task.Run(() => _consumer.Consume(stoppingToken), stoppingToken);
                     var orderRequest = JsonSerializer.Deserialize<Orders>(consumeResult.Message.Value);
 
-                    //Новая модель под проверку доступности товара? [ProductId + Amount]
                     if (orderRequest == null) continue;
+                    
+                    Console.WriteLine($"[ProcessingService] Order: {orderRequest.Id} received.");
+                    
                     using var scope = _serviceProvider.CreateScope();
                     var productsService = scope.ServiceProvider.GetRequiredService<ProductsService>();
                     var isProductAvailable =
@@ -66,6 +68,5 @@ public class ProcessingServiceConsumer : BackgroundService
             {
                 _consumer.Close();
             }
-        
     }
 }

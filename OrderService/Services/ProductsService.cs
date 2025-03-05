@@ -17,16 +17,17 @@ public class ProductsService(OrderDbContext dbContext) : IProductsService
         {
             throw new ProductNotFoundException();
         }
-
+        Console.WriteLine("[OrderService] Products retrieved");
         return products;
     }
 
     public async Task<int> AddProductAsync(ProductRequestDto productRequestDto)
-    {    
+    {   
         if (productRequestDto == null)
         {
             throw new ProductCreationException();
         }
+        
         var product = new Product
         {
             Name = productRequestDto.Name,
@@ -35,6 +36,7 @@ public class ProductsService(OrderDbContext dbContext) : IProductsService
         
         await dbContext.Products.AddAsync(product);
         await dbContext.SaveChangesAsync();
+        Console.WriteLine($"[OrderService] Product {product.Name} added.");
         return product.Id;
     }
 }

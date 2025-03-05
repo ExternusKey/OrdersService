@@ -24,6 +24,7 @@ public class OrdersService(OrderDbContext dbContext, OrderServiceProducer kafkaP
         }
 
         await dbContext.SaveChangesAsync();
+        Console.WriteLine($"[OrderService] Order {orderId} status updated.]");
     }
     
     public async Task<Orders> CreateOrderRequestAsync(OrderRequestDto orderRequestDto)
@@ -38,7 +39,8 @@ public class OrdersService(OrderDbContext dbContext, OrderServiceProducer kafkaP
 
         dbContext.OrderRequests.Add(orderRequest);
         await dbContext.SaveChangesAsync();
-
+        Console.WriteLine($"[OrderService] Order {orderRequest.Id} has been created.");
+        
         var json = JsonSerializer.Serialize(orderRequest);
         await kafkaProducer.SendOrderInfoAsync(json);
         
@@ -51,7 +53,7 @@ public class OrdersService(OrderDbContext dbContext, OrderServiceProducer kafkaP
         
         if (order == null)
             throw new OrderNotFoundException(orderRequestId);
-        
+        Console.WriteLine($"[OrderService] Order {orderRequestId} found.");
         return order;
     }
     

@@ -1,9 +1,9 @@
 ﻿using Common.Repositories;
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using OrderService.Kafka;
 using OrderService.Services;
-using OrderService.Services.Interfaces;
 
 namespace OrderService.Extensions;
 
@@ -14,9 +14,8 @@ public static class ServiceExtensions
         services.AddScoped<OrderServiceProducer>();
         services.AddScoped<OrdersService>();
         services.AddScoped<ProductsService>();
-        services.AddScoped<OrderDbContext>();
         services.AddHostedService<OrderServiceConsumer>();
-
+        services.AddHostedService<KafkaTopicInitializer>();
         return services;
     }
 
@@ -24,8 +23,6 @@ public static class ServiceExtensions
     {        
         
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-        services.AddTransient<NpgsqlConnection>(_ => new NpgsqlConnection(connectionString));
 
         services.AddDbContext<OrderDbContext>(options =>
             options.UseNpgsql(connectionString));

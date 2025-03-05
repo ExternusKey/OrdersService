@@ -35,15 +35,14 @@ public class OrderServiceConsumer : BackgroundService
                 {
                     var consumeResult = await Task.Run(() => _consumer.Consume(stoppingToken), stoppingToken);
                     var orderConfirmation = JsonSerializer.Deserialize<OrderStatusConfirmationResponse>(consumeResult.Message.Value);
-
+                    
                     if (orderConfirmation == null)
                         continue;
-
+                    Console.WriteLine($"[OrderService] Order: {orderConfirmation.OrderId} received.");
                     using var scope = _serviceProvider.CreateScope();
                     var ordersService = scope.ServiceProvider.GetRequiredService<OrdersService>();
                     
                     await ordersService.OrderUpdateAsync(orderConfirmation.OrderId, orderConfirmation.OrderStatus, orderConfirmation.RejectionReason);
-
                 }
             }
             catch

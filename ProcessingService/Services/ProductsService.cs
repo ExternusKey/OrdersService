@@ -51,23 +51,24 @@ public class ProductsService(OrderDbContext dbContext, ProcessingServiceProducer
     }
 
     
-    public async Task AddOrderAsync(Orders orders, bool status, string? reasonMsg = null)
+    public async Task AddOrderAsync(Orders order, bool status, string? reasonMsg = null)
     {
         if (status)
         {
-
             var confirmedOrder = new ConfirmedOrder
             {
-                OrderId = orders.Id,
+                OrderId = order.Id,
                 OrderStatus = "Confirmed",
                 OrderConfirmationDate = DateTime.UtcNow
             };
             dbContext.ConfirmedOrders.Add(confirmedOrder);
             await dbContext.SaveChangesAsync();
             
+            Console.WriteLine($"[ProcessingService] Order: {order.Id} confirmed and saved.");
+            
             var orderStatusConfirmation = new OrderStatusConfirmationResponse
             {
-                OrderId = orders.Id,
+                OrderId = order.Id,
                 OrderStatus = "Confirmed",
                 StatusChangeDate = DateTime.UtcNow
             };
@@ -78,7 +79,7 @@ public class ProductsService(OrderDbContext dbContext, ProcessingServiceProducer
         {
             var rejectedOrder = new RejectedOrder()
             {
-                OrderId = orders.Id,
+                OrderId = order.Id,
                 RejectionReason = reasonMsg,
                 OrderRejectionDate = DateTime.UtcNow
             };
@@ -86,9 +87,11 @@ public class ProductsService(OrderDbContext dbContext, ProcessingServiceProducer
             dbContext.RejectedOrders.Add(rejectedOrder);
             await dbContext.SaveChangesAsync();
             
+            Console.WriteLine($"[ProcessingService] Order: {order.Id} rejected and saved.");
+            
             var orderStatusConfirmation = new OrderStatusConfirmationResponse
             {
-                OrderId = orders.Id,
+                OrderId = order.Id,
                 OrderStatus = "Rejected",
                 RejectionReason = reasonMsg,
                 StatusChangeDate = DateTime.UtcNow

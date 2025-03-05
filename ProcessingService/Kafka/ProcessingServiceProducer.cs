@@ -27,7 +27,7 @@ public class ProcessingServiceProducer
         };
         
         await _producer.ProduceAsync(TopicName, message);
-        Console.WriteLine("[Processing] Order status send to Kafka...");
+        Console.WriteLine("[ProcessingService] Order status send to Kafka...");
     }
 
 }

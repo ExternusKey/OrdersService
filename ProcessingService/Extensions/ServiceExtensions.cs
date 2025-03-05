@@ -12,9 +12,9 @@ public static class ServiceExtensions
     public static IServiceCollection AddProcessingService(this IServiceCollection services)
     {
         services.AddScoped<ProductsService>();
-        services.AddScoped<OrderDbContext>();
         services.AddScoped<ProcessingServiceProducer>();
         services.AddHostedService<ProcessingServiceConsumer>();
+        
         return services;
     }
 
@@ -22,9 +22,7 @@ public static class ServiceExtensions
     {        
         
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-        services.AddTransient<NpgsqlConnection>(_ => new NpgsqlConnection(connectionString));
-
+        
         services.AddDbContext<OrderDbContext>(options =>
             options.UseNpgsql(connectionString));
         

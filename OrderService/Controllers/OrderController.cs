@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using OrderService.Exceptions;
 using OrderService.Models;
 using OrderService.Services;
@@ -6,17 +7,17 @@ using OrderService.Services;
 namespace OrderService.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/orders")]
 public class OrderController(OrdersService ordersService)
     : Controller
 {
-    [HttpPost("CreateOrder")] 
+    [HttpPost]
     public async Task<IActionResult> CreateOrderRequestAsync([FromBody] OrderRequestDto orderRequestDto)
     {
         try
         {
             var orderRequestId = await ordersService.CreateOrderRequestAsync(orderRequestDto);
-            return Ok(new { orderRequestId });
+            return StatusCode(StatusCodes.Status201Created, orderRequestId);
         }
         catch (Exception ex)
         {
@@ -24,12 +25,12 @@ public class OrderController(OrdersService ordersService)
         }
     }
 
-    [HttpGet("GetOrderInfo")]
-    public async Task<IActionResult> GetInfoAboutOrderAsync([FromQuery] int orderRequestId)
+    [HttpGet("{id}", Name = "GetInfoAboutOrderAsync")]
+    public async Task<IActionResult> GetInfoAboutOrderAsync(int id)
     {
         try
         {
-            var orderInfo = await ordersService.GetOrderInfoAsync(orderRequestId);
+            var orderInfo = await ordersService.GetOrderInfoAsync(id);
             return Ok(new { orderInfo });
         }
         catch (OrderNotFoundException ex)

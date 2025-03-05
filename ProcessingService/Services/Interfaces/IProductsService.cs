@@ -7,5 +7,5 @@ public interface IProductsService
 {
     Task<ProductResponse> CheckProductAvailabilityAsync(int productId);
     Task<ProductResponse> UpdateProductAmountAsync(int productId, int amount);
-    Task AddOrderAsync(Orders orders, bool status, string? reasonMsg = null);
+    Task AddOrderAsync(Orders order, bool status, string? reasonMsg = null);
 }

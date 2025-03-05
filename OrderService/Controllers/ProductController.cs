@@ -7,10 +7,10 @@ using OrderService.Services;
 namespace OrderService.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/products")]
 public class ProductController(ProductsService productsService) : Controller
 {
-    [HttpGet("GetProducts")]
+    [HttpGet]
     public async Task<IActionResult> GetProducts()
     {
         try
@@ -28,7 +28,7 @@ public class ProductController(ProductsService productsService) : Controller
         }
     }
 
-    [HttpPost("AddProduct")]
+    [HttpPost]
     public async Task<IActionResult> AddProductAsync(ProductRequestDto productRequestDto)
     {   
         try
