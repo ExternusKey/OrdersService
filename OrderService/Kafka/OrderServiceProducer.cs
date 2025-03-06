@@ -1,18 +1,22 @@
 ﻿using Confluent.Kafka;
+using Microsoft.Extensions.Options;
 using OrderService.Config;
-using OrderService.Services;
 
 namespace OrderService.Kafka;
 
 public class OrderServiceProducer
 {
+    private readonly ILogger<OrderServiceProducer> _logger;
     private readonly IProducer<string, string> _producer;
-    private const string TopicName = ProducersConfig.TopicName;
-    public OrderServiceProducer()
+    private readonly string _topicName;
+
+    public OrderServiceProducer(ILogger<OrderServiceProducer> logger, IOptions<ProducersConfig> producersConfig)
     {
+        _topicName = producersConfig.Value.TopicName;
+        _logger = logger;
         var config = new ProducerConfig
         {
-            BootstrapServers = ProducersConfig.BootstrapServers,
+            BootstrapServers = producersConfig.Value.BootstrapServers,
         };
         _producer = new ProducerBuilder<string, string>(config).Build();
     }
@@ -24,7 +28,7 @@ public class OrderServiceProducer
             Key = Guid.NewGuid().ToString(),
             Value = orderRequestJson
         };
-        await _producer.ProduceAsync(TopicName, message);
-        Console.WriteLine("[OrderService] Order request send to Kafka...");
+        await _producer.ProduceAsync(_topicName, message);
+        _logger.LogInformation("Order request sent to Kafka");
     }
 }

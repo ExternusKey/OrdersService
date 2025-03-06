@@ -1,6 +1,4 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   order-service:
     build:
       context: .
@@ -10,18 +8,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-        restart: true
       kafka:
         condition: service_healthy
-        restart: true
 
   processing-service:
     build:
       context: .
       dockerfile: ProcessingService/Dockerfile
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
   postgres:
     image: postgres:13

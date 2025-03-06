@@ -1,9 +1,8 @@
 ﻿using Common.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using ProcessingService.Config;
 using ProcessingService.Kafka;
 using ProcessingService.Services;
-using ProcessingService.Services.Interfaces;
 
 namespace ProcessingService.Extensions;
 
@@ -14,19 +13,25 @@ public static class ServiceExtensions
         services.AddScoped<ProductsService>();
         services.AddScoped<ProcessingServiceProducer>();
         services.AddHostedService<ProcessingServiceConsumer>();
-        
+
         return services;
     }
 
     public static IServiceCollection AddDataLayer(this IServiceCollection services, IConfiguration configuration)
-    {        
-        
+    {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        
+
         services.AddDbContext<OrderDbContext>(options =>
             options.UseNpgsql(connectionString));
-        
+
         return services;
     }
-    
+
+    public static IServiceCollection AddKafkaConfigs(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<ProducersConfig>(configuration.GetSection("ProducersConfig"));
+        services.Configure<ConsumersConfig>(configuration.GetSection("ConsumersConfig"));
+
+        return services;
+    }
 }

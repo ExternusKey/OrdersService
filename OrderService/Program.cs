@@ -8,8 +8,10 @@ var services = service.Services;
 
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
-services.AddOrderService();
-services.AddDataLayer(configuration);
+
+services.AddKafkaConfigs(configuration)
+    .AddOrderService()
+    .AddDataLayer(configuration);
 
 services.AddControllers().AddJsonOptions(options =>
 {

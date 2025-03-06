@@ -7,8 +7,8 @@ var services = service.Services;
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 
-services.AddProcessingService();
-services.AddDataLayer(configuration);
+services.AddKafkaConfigs(configuration).AddProcessingService()
+    .AddDataLayer(configuration);
 
 var app = service.Build();
 app.UseHttpsRedirection();

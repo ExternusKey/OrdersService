@@ -2,6 +2,7 @@
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Microsoft.EntityFrameworkCore;
+using OrderService.Config;
 using OrderService.Kafka;
 using OrderService.Services;
 
@@ -11,17 +12,17 @@ public static class ServiceExtensions
 {
     public static IServiceCollection AddOrderService(this IServiceCollection services)
     {
-        services.AddScoped<OrderServiceProducer>();
+        services.AddSingleton<OrderServiceProducer>();
         services.AddScoped<OrdersService>();
         services.AddScoped<ProductsService>();
+        services.AddScoped<OrderDbContext>();
         services.AddHostedService<OrderServiceConsumer>();
-        services.AddHostedService<KafkaTopicInitializer>();
+        services.AddHostedService<KafkaInitializer>();
         return services;
     }
 
     public static IServiceCollection AddDataLayer(this IServiceCollection services, IConfiguration configuration)
-    {        
-        
+    {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContext<OrderDbContext>(options =>
@@ -29,7 +30,15 @@ public static class ServiceExtensions
 
         return services;
     }
-    
+
+    public static IServiceCollection AddKafkaConfigs(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<ProducersConfig>(configuration.GetSection("ProducersConfig"));
+        services.Configure<ConsumersConfig>(configuration.GetSection("ConsumersConfig"));
+
+        return services;
+    }
+
     public static void InitializeDatabase(this IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();

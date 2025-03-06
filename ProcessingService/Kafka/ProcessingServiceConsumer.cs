@@ -2,6 +2,7 @@
 using Confluent.Kafka;
 using ProcessingService.Config;
 using Common.Models;
+using Microsoft.Extensions.Options;
 using ProcessingService.Models.Responses;
 using ProcessingService.Services;
 
@@ -11,62 +12,66 @@ public class ProcessingServiceConsumer : BackgroundService
 {
     private readonly IConsumer<string, string> _consumer;
     private readonly IServiceProvider _serviceProvider;
-    public ProcessingServiceConsumer(IServiceProvider serviceProvider)
+    private readonly ILogger<ProcessingServiceConsumer> _logger;
+
+    public ProcessingServiceConsumer(IServiceProvider serviceProvider, ILogger<ProcessingServiceConsumer> logger,
+        IOptions<ConsumersConfig> consumerConfig)
     {
         _serviceProvider = serviceProvider;
+        _logger = logger;
         var config = new ConsumerConfig
         {
-            BootstrapServers = ConsumersConfig.BootstrapServers,
-            GroupId = ConsumersConfig.GroupId,
+            BootstrapServers = consumerConfig.Value.BootstrapServers,
+            GroupId = consumerConfig.Value.GroupId,
             AutoOffsetReset = AutoOffsetReset.Earliest,
         };
         _consumer = new ConsumerBuilder<string, string>(config).Build();
-        _consumer.Subscribe(ConsumersConfig.TopicName);
+        _consumer.Subscribe(consumerConfig.Value.TopicName);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-            try
+        try
+        {
+            while (!stoppingToken.IsCancellationRequested)
             {
-                while (!stoppingToken.IsCancellationRequested)
+                var consumeResult = await Task.Run(() => _consumer.Consume(stoppingToken), stoppingToken);
+                var orderRequest = JsonSerializer.Deserialize<Orders>(consumeResult.Message.Value);
+
+                if (orderRequest == null) continue;
+                _logger.LogInformation($"Order: {orderRequest.Id} received.");
+
+                using var scope = _serviceProvider.CreateScope();
+                var productsService = scope.ServiceProvider.GetRequiredService<ProductsService>();
+                var isProductAvailable =
+                    await productsService.CheckProductAvailabilityAsync(orderRequest.ProductId);
+
+                if (isProductAvailable.Status == ProductResponseStatus.ProductNotFound)
                 {
-                    var consumeResult = await Task.Run(() => _consumer.Consume(stoppingToken), stoppingToken);
-                    var orderRequest = JsonSerializer.Deserialize<Orders>(consumeResult.Message.Value);
-
-                    if (orderRequest == null) continue;
-                    
-                    Console.WriteLine($"[ProcessingService] Order: {orderRequest.Id} received.");
-                    
-                    using var scope = _serviceProvider.CreateScope();
-                    var productsService = scope.ServiceProvider.GetRequiredService<ProductsService>();
-                    var isProductAvailable =
-                        await productsService.CheckProductAvailabilityAsync(orderRequest.ProductId);
-
-                    if (isProductAvailable.Status == ProductResponseStatus.ProductNotFound)
-                    {
-                        await productsService.AddOrderAsync(orderRequest, false, isProductAvailable.Message);
-                        continue;
-                    }
-
-                    var isAmountUpdated =
-                        await productsService.UpdateProductAmountAsync(orderRequest.ProductId, orderRequest.Amount);
-
-                    if (isAmountUpdated.Status == ProductResponseStatus.NotEnoughAmount)
-                    {
-                        await productsService.AddOrderAsync(orderRequest, false, isAmountUpdated.Message);
-                        continue;
-                    }
-
-                    await productsService.AddOrderAsync(orderRequest, isAmountUpdated.IsSuccess);
+                    await productsService.AddOrderAsync(orderRequest, false, isProductAvailable.Message);
+                    continue;
                 }
+
+                var isAmountUpdated =
+                    await productsService.UpdateProductAmountAsync(orderRequest.ProductId, orderRequest.Amount);
+
+                if (isAmountUpdated.Status == ProductResponseStatus.NotEnoughAmount)
+                {
+                    await productsService.AddOrderAsync(orderRequest, false, isAmountUpdated.Message);
+                    continue;
+                }
+
+                await productsService.AddOrderAsync(orderRequest, isAmountUpdated.IsSuccess);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ProcessingService] Error occured while processing message - {ex}");
-            }
-            finally
-            {
-                _consumer.Close();
-            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error occured while processing message - {ex}");
+        }
+        finally
+        {
+            _logger.LogInformation("Processing service consumer stopped.");
+            _consumer.Close();
+        }
     }
 }

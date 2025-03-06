@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
 using OrderService.Exceptions;
 using OrderService.Models;
 using OrderService.Services;
@@ -25,7 +24,7 @@ public class OrderController(OrdersService ordersService)
         }
     }
 
-    [HttpGet("{id}", Name = "GetInfoAboutOrderAsync")]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetInfoAboutOrderAsync(int id)
     {
         try
@@ -35,12 +34,11 @@ public class OrderController(OrdersService ordersService)
         }
         catch (OrderNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message });  
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
         }
     }
-
 }

@@ -1,5 +1,4 @@
-﻿using Common.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OrderService.Exceptions;
 using OrderService.Models;
 using OrderService.Services;
@@ -16,12 +15,12 @@ public class ProductController(ProductsService productsService) : Controller
         try
         {
             var products = await productsService.GetProductsAsync();
-            return Ok(new {products});
+            return Ok(new { products });
         }
         catch (ProductNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message }); 
-        }        
+            return NotFound(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
@@ -30,7 +29,7 @@ public class ProductController(ProductsService productsService) : Controller
 
     [HttpPost]
     public async Task<IActionResult> AddProductAsync(ProductRequestDto productRequestDto)
-    {   
+    {
         try
         {
             var productId = await productsService.AddProductAsync(productRequestDto);
