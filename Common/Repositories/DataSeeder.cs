@@ -7,7 +7,7 @@ public class DataSeeder
     public static void SeedGpuData(OrderDbContext context)
     {
         if (context.Products.Any()) return;
-        
+
         context.Products.AddRange(
             new Product { Name = "NVIDIA GeForce RTX 4090", Amount = 100 },
             new Product { Name = "AMD Radeon RX 7900 XTX", Amount = 150 },
@@ -29,6 +29,5 @@ public class DataSeeder
             new Product { Name = "NVIDIA GeForce GTX 1650 Super", Amount = 190 },
             new Product { Name = "AMD Radeon Vega 64", Amount = 140 }
         );
-        context.SaveChanges();
     }
 }
