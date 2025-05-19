@@ -17,7 +17,8 @@ public static class ServiceExtensions
         services.AddScoped<OrdersService>();
         services.AddScoped<ProductsService>();
         services.AddHostedService<OrderServiceConsumer>();
-        services.AddHostedService<KafkaInitializer>();
+        //Manual creating topics in Kafka
+        //services.AddHostedService<KafkaInitializer>();
         return services;
     }
 

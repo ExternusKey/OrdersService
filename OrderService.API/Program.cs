@@ -7,6 +7,7 @@ var services = service.Services;
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 services.AddHealthChecks();
+services.AddControllers();
 
 services.AddKafkaConfigs(configuration)
     .AddOrderService()

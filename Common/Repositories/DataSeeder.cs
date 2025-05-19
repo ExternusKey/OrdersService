@@ -29,5 +29,7 @@ public class DataSeeder
             new Product { Name = "NVIDIA GeForce GTX 1650 Super", Amount = 190 },
             new Product { Name = "AMD Radeon Vega 64", Amount = 140 }
         );
+
+        context.SaveChanges();
     }
 }
