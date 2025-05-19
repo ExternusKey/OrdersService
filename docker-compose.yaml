@@ -1,25 +1,39 @@
 ﻿services:
-  order-service:
+  orderservice.api:
     build:
       context: .
-      dockerfile: OrderService/Dockerfile
+      dockerfile: OrderService.API/Dockerfile
     ports:
       - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=Orders;Username=postgres;Password=postgres
+      - ProducersConfig__BootstrapServers=kafka:9092
+      - ConsumersConfig__BootstrapServers=kafka:9092
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
-
-  processing-service:
+      kafka-init:
+        condition: service_completed_successfully
+        
+  orderservice.daemon:
     build:
       context: .
-      dockerfile: ProcessingService/Dockerfile
+      dockerfile: OrderService.Daemon/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=Orders;Username=postgres;Password=postgres
+      - ProducersConfig__BootstrapServers=kafka:9092
+      - ConsumersConfig__BootstrapServers=kafka:9092
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
 
   postgres:
     image: postgres:13
@@ -67,7 +81,19 @@
       retries: 10
       start_period: 20s
       timeout: 10s
-
+      
+  kafka-init:
+    image: confluentinc/cp-kafka:latest
+    restart: "no"
+    entrypoint: [ "sh", "-c",
+      "kafka-topics --bootstrap-server kafka:9092 \
+      --create --if-not-exists --topic order_created --partitions 2 --replication-factor 1 && \
+      kafka-topics --bootstrap-server kafka:9092 \
+      --create --if-not-exists --topic order_confirmation_status --partitions 2 --replication-factor 1" ]
+    depends_on:
+      kafka:
+        condition: service_healthy
+  
   kafdrop:
     image: obsidiandynamics/kafdrop
     container_name: kafdrop

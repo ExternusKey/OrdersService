@@ -7,7 +7,8 @@ var services = service.Services;
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 
-services.AddKafkaConfigs(configuration).AddProcessingService()
+services.AddKafkaConfigs(configuration)
+    .AddProcessingService()
     .AddDataLayer(configuration);
 
 var app = service.Build();

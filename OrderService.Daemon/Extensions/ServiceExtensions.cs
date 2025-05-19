@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProcessingService.Config;
 using ProcessingService.Kafka;
+using ProcessingService.Kafka.Interfaces;
 using ProcessingService.Services;
 
 namespace ProcessingService.Extensions;
@@ -11,7 +12,7 @@ public static class ServiceExtensions
     public static IServiceCollection AddProcessingService(this IServiceCollection services)
     {
         services.AddScoped<ProductsService>();
-        services.AddScoped<ProcessingServiceProducer>();
+        services.AddScoped<IProcessingServiceProducer, ProcessingServiceProducer>();
         services.AddHostedService<ProcessingServiceConsumer>();
 
         return services;
